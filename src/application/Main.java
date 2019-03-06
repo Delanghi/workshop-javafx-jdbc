@@ -1,5 +1,4 @@
-package application;
-	
+package application;	
 
 import java.io.IOException;
 
@@ -9,8 +8,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
 import javafx.stage.Stage;
 
-
 public class Main extends Application {
+	
+ // ATRIBUTO
+	private static Scene mainScene; 								// guardando a referência neste ATRIBUTO	
+	
+ // 
 	@Override 
 	public void start(Stage primaryStage) {  
 		try {   
@@ -20,7 +23,7 @@ public class Main extends Application {
 			scrollPane.setFitToHeight(true);
 			scrollPane.setFitToWidth(true); 
 	 
-			Scene mainScene = new Scene(scrollPane);   
+			mainScene = new Scene(scrollPane);   					// referenciando o ATRIBUTO acima
 			primaryStage.setScene(mainScene);   
 			primaryStage.setTitle("Sample JavaFX application");   
 			primaryStage.show();  
@@ -28,6 +31,11 @@ public class Main extends Application {
 		catch (IOException e) {   
 			e.printStackTrace();  
 		} 
+	}
+	
+ // MÉTODOS
+	public static Scene getMainScene() {			// MÉTODO criado pra pegar esta referência
+		return mainScene;
 	}
 	
 	public static void main(String[] args) {
