@@ -1,18 +1,27 @@
 package gui;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 
 import application.Main;
+import gui.util.Alerts;
+import gui.util.Utils;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.Pane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import model.entities.Department;
 import model.services.DepartmentService;
@@ -33,15 +42,16 @@ public class DepartmentListController implements Initializable {
 	@FXML
 	private Button btNew;
 	
-	private ObservableList<Department> obsList;								// declaração
+	private ObservableList<Department> obsList;							// declaração
 	
 	@FXML
-	public void onBtNewAction() {											// tratando o botão
-		System.out.println("onBtNewAction");
+	public void onBtNewAction(ActionEvent event) {						// para ter referência p/ Controller que recebeu o evento
+		Stage parentStage = Utils.currentStage(event);
+		createDialogForm("/gui/DepartmentForm.fxml", parentStage);
 	}
 	
  // MÉTODOS
-	public void setDepartmentService(DepartmentService service) {			// inversão de controlle ao invés de INSTANCIAR no ATRIBUTO
+	public void setDepartmentService(DepartmentService service) {		// inversão de controlle ao invés de INSTANCIAR no ATRIBUTO
 		this.service = service;
 	}
 	
@@ -50,7 +60,7 @@ public class DepartmentListController implements Initializable {
 	@Override
 	public void initialize(URL url, ResourceBundle rb) {
 		initializeNodes();
-	}
+	}  
 	
 	private void initializeNodes() {
 		tableColumnId.setCellValueFactory(new PropertyValueFactory<>("id")); 
@@ -68,5 +78,23 @@ public class DepartmentListController implements Initializable {
 		obsList = FXCollections.observableArrayList(list);					// INSTANCIAMOS o "obsList" com os dados de "list"
 		tableViewDepartment.setItems(obsList);								// para mostrar os dados na tela
 	}
+	
+	private void createDialogForm(String absoluteName, Stage parentStage) {						// foi referenciado o Stage da janela de diálogo
+		try {
+			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));	// INSTANCIAR pra abrir tela
+			Pane pane = loader.load();
+			
+			Stage dialogStage = new Stage();					// temos que INSTANCIAR novo Stage; uma janela na frente da outra
+			dialogStage.setTitle("Enter department data");		// para configurar o título da janela
+			dialogStage.setScene(new Scene(pane));				// novo cenário
+			dialogStage.setResizable(false);					// a janela não poderá ser redimensionada
+			dialogStage.initOwner(parentStage);					// esta é importante: que é o pai desta Stage
+			dialogStage.initModality(Modality.WINDOW_MODAL);	// a janela vai travar; só quando fechar vc terá acesso na outra
+			dialogStage.showAndWait();
+		} 
+		catch (IOException e) {
+			Alerts.showAlert("IO Exception", "Error loading view", e.getMessage(), AlertType.ERROR);
+		}
+	}	
 	
 }
