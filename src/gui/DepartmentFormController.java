@@ -9,8 +9,11 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import model.entities.Department;
 
 public class DepartmentFormController implements Initializable {
+	
+	private Department entity;
 
  // ATRIBUTOS - DECLARAÇÃO DOS COMPONENTES DA TELA
 	@FXML
@@ -28,6 +31,11 @@ public class DepartmentFormController implements Initializable {
 	@FXML
 	private Button btCancel;
 	
+	public void setDepartment(Department entity) {
+		this.entity = entity;
+	}
+
+
  // DECLARAÇÃO DOS MÉTODOS PARA TRATAR OS BOTÕES	
 	@FXML
 	public void onBtSaveAction() {
@@ -47,10 +55,17 @@ public class DepartmentFormController implements Initializable {
 	
  // FUNÇÕES - RESTRIÇÕES 
 	private void initializeNodes() {
-		Constraints.setTextFieldInteger(txtId);							// aqui informamos que o ID só terá números inteiros
-		Constraints.setTextFieldMaxLength(txtName, 30); 				// aqui teremos nome com no máximo 30 letras
+		Constraints.setTextFieldInteger(txtId);						// aqui informamos que o ID só terá números inteiros
+		Constraints.setTextFieldMaxLength(txtName, 30); 			// aqui teremos nome com no máximo 30 letras
 	}
 	
-	
+ // MÉTODO
+public void updateFormData() {									// p/ jogar info das cxs.de texto ID e Name que estão no "Department entity"
+		if(entity == null) {										// teste preventivo
+			throw new IllegalStateException("Entity was null");
+		}
+		txtId.setText(String.valueOf(entity.getId()));		// "valueOf" a cx.de texto lê String; por isso temos que transformar Integer em String
+		txtName.setText(entity.getName());
+	}
 
 }
