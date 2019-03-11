@@ -10,14 +10,17 @@ public class Utils {
 		return (Stage) ((Node) event.getSource()).getScene().getWindow();	
 
 	}
+	
+ // MÉTODO
+	public static Integer tryParseToInt(String str) {				// para a conversão do número (valor na caixa de seleção)
+		try {
+			return Integer.parseInt(str);							// ou converte-se o número corretamente...
+		}
+		catch (NumberFormatException e) {
+			return null;											// ...ou retorna o valor nulo. Anulamos o risco de acontecer exceção, caso tenhamos, p.ex., letras ao invés de números
+		}
+		
+	}
+	
+	
 }
-
-
-
-
-
-//"ActionEvent event": quando clicamos no botão, pegamos o "stage" deste botão
-
-// queremos o "getSource" Tipo "Node" por isso downcast
-
-// "getWindow" é SuperCLASSE de "Stage". P/ isso downcast tb 

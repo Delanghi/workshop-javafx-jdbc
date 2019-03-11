@@ -3,17 +3,25 @@ package gui;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import db.DbException;
+import gui.util.Alerts;
 import gui.util.Constraints;
+import gui.util.Utils;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import model.entities.Department;
+import model.services.DepartmentService;
 
 public class DepartmentFormController implements Initializable {
 	
 	private Department entity;
+	
+	private DepartmentService service;						// criamos uma dependência
 
  // ATRIBUTOS - DECLARAÇÃO DOS COMPONENTES DA TELA
 	@FXML
@@ -31,20 +39,47 @@ public class DepartmentFormController implements Initializable {
 	@FXML
 	private Button btCancel;
 	
+ // MÉTODO
 	public void setDepartment(Department entity) {
 		this.entity = entity;
 	}
-
+	
+	public void setDepartmentService(DepartmentService service) {
+		this.service = service;
+	}
 
  // DECLARAÇÃO DOS MÉTODOS PARA TRATAR OS BOTÕES	
 	@FXML
-	public void onBtSaveAction() {
-		System.out.println("onBtSaveAction");
+	public void onBtSaveAction(ActionEvent event) {									// MÉTODO do botão "save"
+		if(entity == null) {										// prevenção
+			throw new IllegalStateException("Entity was null");
+		}															// estes avisos são importantes p/ avisar programador p/ injetar dependência
+		if(service == null) {
+			throw new IllegalStateException("Service was null");
+		}
+		try {
+			entity = getFormData();									// vai pegar dados das cxs.de texto e INSTANCIAR no depto. p/ nós
+			service.saveOrUpdate(entity); 							// assim salvamos a info no banco de dados
+			Utils.currentStage(event).close(); 						// após clicar botão "save", a janela de fechar
+		}
+		catch (DbException e) {										// como se trata de banco de dados, pode dar ERRO
+			Alerts.showAlert("Error saving object", null, e.getMessage(), AlertType.ERROR);
+		}			
+		
+	}
+
+	private Department getFormData() {
+		Department obj = new Department();
+		
+		obj.setId(Utils.tryParseToInt(txtId.getText()));	// vamos buscar info na cx.de texto. Como é String, usamos "Utils.tryParseToInt" p/ converter
+		obj.setName(txtName.getText());						// vamos buscar info na cx.de texto. este é String mesmo
+		
+		return obj;											// vai retornar um novo Objeto 
 	}
 
 	@FXML
-	public void onBtCancelAction() {
-		System.out.println("onBtCancelAction");
+	public void onBtCancelAction(ActionEvent event) {
+		Utils.currentStage(event).close(); 					// após clicar botão "cancel", a janela de fechar
 	}
 	
 	

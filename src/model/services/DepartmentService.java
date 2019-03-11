@@ -13,4 +13,17 @@ public class DepartmentService {
 	public List<Department> findAll() {							// MÉTODO que vai retornar uma lista de depto
 		return dao.findAll();									// este vai buscar os dados no SQL 
 	}
+	
+ // OPERAÇÃO 
+	public void saveOrUpdate(Department obj) {
+		if(obj.getId() == null) {								// se qdo buscar o número ID, este número ñ existir, ou seja, igual a zero
+			dao.insert(obj);									// então o programa irá criar/insrir um número ID para este "obj"
+		}
+		else {
+			dao.update(obj);									// caso contrário, se o ID existir, será apenas feito o update
+		}
+	}
+	
+	
+	
 }
