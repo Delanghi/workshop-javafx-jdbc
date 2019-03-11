@@ -1,9 +1,12 @@
 package gui;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import db.DbException;
+import gui.listeners.DataChangeListener;
 import gui.util.Alerts;
 import gui.util.Constraints;
 import gui.util.Utils;
@@ -22,6 +25,8 @@ public class DepartmentFormController implements Initializable {
 	private Department entity;
 	
 	private DepartmentService service;						// criamos uma dependência
+	
+	private List<DataChangeListener> dataChangeListeners = new ArrayList<>();
 
  // ATRIBUTOS - DECLARAÇÃO DOS COMPONENTES DA TELA
 	@FXML
@@ -48,10 +53,15 @@ public class DepartmentFormController implements Initializable {
 		this.service = service;
 	}
 
+	public void subscribeDataChangeListener(DataChangeListener listener) {			// outros Objetos, desde que implementem esta interface "DataChangeListener", podem se inscrever na lista
+		dataChangeListeners.add(listener);											// adicionar Objeto à lista
+	}
+	
+	
  // DECLARAÇÃO DOS MÉTODOS PARA TRATAR OS BOTÕES	
 	@FXML
 	public void onBtSaveAction(ActionEvent event) {									// MÉTODO do botão "save"
-		if(entity == null) {										// prevenção
+		if(entity == null) {														// prevenção
 			throw new IllegalStateException("Entity was null");
 		}															// estes avisos são importantes p/ avisar programador p/ injetar dependência
 		if(service == null) {
@@ -60,12 +70,18 @@ public class DepartmentFormController implements Initializable {
 		try {
 			entity = getFormData();									// vai pegar dados das cxs.de texto e INSTANCIAR no depto. p/ nós
 			service.saveOrUpdate(entity); 							// assim salvamos a info no banco de dados
+			notifyDataChangeListeners();							// após salvamento com sucesso, os "listeners" devem ser notificados
 			Utils.currentStage(event).close(); 						// após clicar botão "save", a janela de fechar
 		}
 		catch (DbException e) {										// como se trata de banco de dados, pode dar ERRO
 			Alerts.showAlert("Error saving object", null, e.getMessage(), AlertType.ERROR);
-		}			
-		
+		}					
+	}
+
+	private void notifyDataChangeListeners() {	
+		for(DataChangeListener listener : dataChangeListeners) {
+			listener.onDataChanged();								// p/ executar o MÉTODO "onDataChanged" em cada um dos listeners
+		}
 	}
 
 	private Department getFormData() {
