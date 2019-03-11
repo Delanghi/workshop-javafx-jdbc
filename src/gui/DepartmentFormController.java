@@ -3,7 +3,9 @@ package gui;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import db.DbException;
 import gui.listeners.DataChangeListener;
@@ -18,6 +20,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import model.entities.Department;
+import model.exceptions.ValidationException;
 import model.services.DepartmentService;
 
 public class DepartmentFormController implements Initializable {
@@ -73,6 +76,9 @@ public class DepartmentFormController implements Initializable {
 			notifyDataChangeListeners();							// após salvamento com sucesso, os "listeners" devem ser notificados
 			Utils.currentStage(event).close(); 						// após clicar botão "save", a janela de fechar
 		}
+		catch (ValidationException e) {								// caso ocorrá um ERRO na validação...
+			setErrorMessages(e.getErrors());						
+		}
 		catch (DbException e) {										// como se trata de banco de dados, pode dar ERRO
 			Alerts.showAlert("Error saving object", null, e.getMessage(), AlertType.ERROR);
 		}					
@@ -87,8 +93,19 @@ public class DepartmentFormController implements Initializable {
 	private Department getFormData() {
 		Department obj = new Department();
 		
+		ValidationException exception = new ValidationException("Validation error"); 		// INSTANCIANDO a exceção
+		
 		obj.setId(Utils.tryParseToInt(txtId.getText()));	// vamos buscar info na cx.de texto. Como é String, usamos "Utils.tryParseToInt" p/ converter
+		
+		if(txtName.getText() == null || txtName.getText().trim().equals("")) {				// se campo for "nulo" ou "vazio"...
+			exception.addErrors("name",  "Field can't be empty");
+						
+		}
 		obj.setName(txtName.getText());						// vamos buscar info na cx.de texto. este é String mesmo
+		
+		if(exception.getErrors().size() > 0) {				// aqui estamos testando se a coleção de ERROS tem pelo menos um ERRO
+			throw exception;								// se for verdade, lançará a exceção
+		}
 		
 		return obj;											// vai retornar um novo Objeto 
 	}
@@ -111,12 +128,19 @@ public class DepartmentFormController implements Initializable {
 	}
 	
  // MÉTODO
-public void updateFormData() {									// p/ jogar info das cxs.de texto ID e Name que estão no "Department entity"
+	public void updateFormData() {									// p/ jogar info das cxs.de texto ID e Name que estão no "Department entity"
 		if(entity == null) {										// teste preventivo
 			throw new IllegalStateException("Entity was null");
 		}
 		txtId.setText(String.valueOf(entity.getId()));		// "valueOf" a cx.de texto lê String; por isso temos que transformar Integer em String
 		txtName.setText(entity.getName());
 	}
-
+	
+	private void setErrorMessages (Map<String, String> errors) {	// colocar a mensagem de ERRO referente ao campo "vazio" da janela
+		Set<String> fields = errors.keySet();
+		
+		if(fields.contains("name")) {								// verificar se existe a chave "name" (linha 98) 
+			labelErrorName.setText(errors.get("name"));				// pega a mensagem referente a "name" e seta no "labelErrorName" (label vazia na janela)
+		}
+	}
 }
