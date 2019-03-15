@@ -3,12 +3,15 @@ package gui;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 
 import application.Main;
+import db.DbIntegrityException;
 import gui.listeners.DataChangeListener;
 import gui.util.Alerts;
 import gui.util.Utils;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -18,6 +21,8 @@ import javafx.fxml.Initializable;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -39,6 +44,12 @@ public class DepartmentListController implements Initializable, DataChangeListen
 	
 	@FXML
 	private TableColumn<Department, String> tableColumnName;
+	
+	@FXML
+	private TableColumn<Department, Department> tableColumnEDIT; 
+	
+	@FXML
+	private TableColumn<Department, Department> tableColumnREMOVE; 
 	
 	@FXML
 	private Button btNew;
@@ -79,6 +90,8 @@ public class DepartmentListController implements Initializable, DataChangeListen
 		List<Department> list = service.findAll();							// vai buscar os "departamentos" mocados na outra CLASSE
 		obsList = FXCollections.observableArrayList(list);					// INSTANCIAMOS o "obsList" com os dados de "list"
 		tableViewDepartment.setItems(obsList);								// para mostrar os dados na tela
+		initEditButtons();													// isso acrescenta um botão EDIT em cada linha de depto.
+		initRemoveButtons(); 												// acrescenta botão REMOVE em cada linha
 	}
 	
 	private void createDialogForm(Department obj, String absoluteName, Stage parentStage) {		// foi referenciado o Stage da janela de diálogo
@@ -109,4 +122,75 @@ public class DepartmentListController implements Initializable, DataChangeListen
 	public void onDataChanged() {								// recebemos a notificação de que os dados foram alterados...
 		updateTableView();										// esta função faz o updsate da tabela
 	}		
+	
+	
+ // MÉTODO do botão EDIT
+	private void initEditButtons() {  
+		tableColumnEDIT.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));  
+		tableColumnEDIT.setCellFactory(param -> new TableCell<Department, Department>() {   
+			private final Button button = new Button("edit"); 
+	 
+			@Override   
+			protected void updateItem(Department obj, boolean empty) {    
+				super.updateItem(obj, empty); 
+				setGraphic(button);    
+	 
+				if (obj == null) {     
+					setGraphic(null);     
+					return;    
+				} 	 
+				button.setOnAction(    
+				event -> createDialogForm(obj, "/gui/DepartmentForm.fxml",Utils.currentStage(event)));   
+			}  
+		}); 
+	} 
+
+ // MÉTODO do botão REMOVE	
+	private void initRemoveButtons() {  
+		tableColumnREMOVE.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(param.getValue()));  
+		tableColumnREMOVE.setCellFactory(param -> new TableCell<Department, Department>() {         
+			private final Button button = new Button("remove"); 
+		 
+			@Override         
+			protected void updateItem(Department obj, boolean empty) {             
+				super.updateItem(obj, empty); 
+		 
+				if (obj == null) {                 
+					setGraphic(null);                 
+					return;             
+				} 
+		 
+			        setGraphic(button);             
+					button.setOnAction(event -> removeEntity(obj));         
+			}     
+	    }); 
+	}
+
+ // MÉTODO 																// MÉTODO tinha que ser criado na CLASSE
+	private void removeEntity(Department obj) { 						// este é para a ação de "remover"
+		Optional<ButtonType> result = Alerts.showConfirmation(
+											"Confirmation", "Are you sure to delete?");
+		
+		if(result.get() == ButtonType.OK) {
+			if(service == null) {
+				throw new IllegalStateException("Sevice was null");
+			}
+			try {
+				service.remove(obj);
+				updateTableView();
+				
+			} catch (DbIntegrityException e) {							// caso dê ERRO na hora de deletar
+				Alerts.showAlert("Error removing object", null, e.getMessage(), AlertType.ERROR);
+			}
+		}
+	}
+
+	
+	
+	
+	
+	
+	
+	
+	
 }
